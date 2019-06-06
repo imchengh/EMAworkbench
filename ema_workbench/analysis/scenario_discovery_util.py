@@ -91,7 +91,8 @@ def _make_box(x):
     '''
 
     def limits(x):
-        if (x.dtype == int) or (x.dtype == float):
+        if (pd.api.types.is_integer_dtype(x.dtype)) or\
+           (pd.api.types.is_float_dtype(x.dtype)):  # @UndefinedVariable
             return pd.Series([x.min(), x.max()])
         else:
             return pd.Series([set(x), set(x)])
@@ -287,7 +288,7 @@ def _calculate_quasip(x, y, box, Hbox, Tbox):
 
     Parameters
     ----------
-    x : recarray
+    x : DataFrame
     y : np.array
     box : DataFrame
     Hbox : int
@@ -349,6 +350,7 @@ def plot_pair_wise_scatter(x, y, boxlim, box_init, restricted_dims):
         categories_all = box_init.at[0, column]
         missing = categories_all - categories_inbox
         categories = list(categories_inbox) + list(missing)
+        print(column, categories)
         data[column] = data[column].cat.set_categories(categories)
 
         # keep the mapping for updating ticklabels
@@ -409,7 +411,7 @@ def plot_pair_wise_scatter(x, y, boxlim, box_init, restricted_dims):
         if xlabel in cats:
             labels = []
             locs = []
-            mapping = categorical_mappings[ylabel]
+            mapping = categorical_mappings[xlabel]
             for i in range(-1, len(mapping) + 1):
                 locs.append(i)
                 try:

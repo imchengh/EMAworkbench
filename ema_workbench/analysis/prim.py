@@ -105,7 +105,7 @@ def pca_preprocess(experiments, y, subsets=None, exclude=set()):
         #        should we check all uncertainties are in x?
         pass
 
-    # prepare the dtypes for the new rotated experiments recarray
+    # prepare the dtypes for the new rotated experiments dataframe
     new_columns = []
     new_dtypes = []
     for key, value in subsets.items():
@@ -447,6 +447,10 @@ class PrimBox(object):
                                table_formatter=table_formatter)
 
     def inspect_tradeoff(self):
+        # TODO::
+        # make legend with res_dim color code a selector as well?
+        # https://medium.com/dataexplorations/focus-generating-an-interactive-legend-in-altair-9a92b5714c55
+        
         boxes = []
         nominal_vars = []
         quantitative_dims = set(self.prim.x_float_colums.tolist() +
@@ -477,9 +481,13 @@ class PrimBox(object):
             # handle nominal
             for dim in nominal_res_dims:
                 # TODO:: qp values
-                items = df[nominal_res_dims].loc[0, :].values[0]
+                items = df[dim].values[0]
                 for j, item in enumerate(items):
-                    entry = dict(name=dim, n_items=len(items) + 1,
+#                     we need to have tick labeling to be dynamic?
+#                     adding it to the dict wont work, creates horrible figure
+#                     unless we can force a selection?
+                    name = f"{dim}, {qp.loc[qp.index[0], dim]: .2g}"
+                    entry = dict(name=name, n_items=len(items) + 1,
                                  item=item, id=int(i),
                                  x=j / len(items))
                     nominal_vars.append(entry)
@@ -553,7 +561,7 @@ class PrimBox(object):
 
         texts2 = base.mark_text(
             baseline='top', dy=5, align='right').encode(
-            text=alt.Text('text:O'), x='x_upper:Q').transform_calculate(
+            text=alt.Text('text:O'),x='x_upper:Q').transform_calculate(
             text=(
                 'datum.qp_upper>0?'
                 'format(datum.x2, ".2")+" ("+format(datum.qp_upper, ".1")+")" :'
@@ -565,6 +573,10 @@ class PrimBox(object):
             x2='end:Q',
         )
 
+        # TODO:: for qp can we do something with the y encoding here and
+        # connecting this to a selection?
+        # seems tricky, no clear way to control the actual labels
+        # or can we use the text channel identical to the above?
         nominal = alt.Chart(nominal_vars).mark_point().encode(
             x='x:Q',
             y='name:N',
@@ -774,7 +786,8 @@ class PrimBox(object):
         resdim = sdutil._determine_restricted_dims(self.box_lims[i],
                                                    self.prim.box_init)
 
-        return sdutil.plot_pair_wise_scatter(self.prim.x, self.prim.y,
+        return sdutil.plot_pair_wise_scatter(self.prim.x.iloc[self.yi_initial,:],
+                                             self.prim.y[self.yi_initial],
                                              self.box_lims[i],
                                              self.prim.box_init,
                                              resdim)
@@ -884,11 +897,11 @@ class Prim(sdutil.OutputFormatterMixin):
             pass
         x = x.reset_index(drop=True)
 
-        x_float = x.select_dtypes(np.float)
+        x_float = x.select_dtypes([np.float, np.float32, np.float64, float])
         self.x_float = x_float.values
         self.x_float_colums = x_float.columns.values
 
-        x_int = x.select_dtypes(np.int)
+        x_int = x.select_dtypes([np.int, np.int32, np.int64, int])
         self.x_int = x_int.values
         self.x_int_columns = x_int.columns.values
 

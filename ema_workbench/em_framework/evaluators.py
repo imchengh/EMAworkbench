@@ -380,7 +380,7 @@ def perform_experiments(models, scenarios=0, policies=0, evaluator=None,
     Returns
     -------
     tuple
-        the experiments as a numpy recarray, and a dict
+        the experiments as a dataframe, and a dict
         with the name of an outcome as key, and the associated scores
         as numpy array. Experiments and outcomes are alinged on index.
 
@@ -443,6 +443,8 @@ def perform_experiments(models, scenarios=0, policies=0, evaluator=None,
 
     nr_of_exp = n_models * n_scenarios * n_policies
 
+    # TODO:: change to 0 policies / 0 scenarios is sampling set to 0 for
+    # it
     _logger.info(('performing {} scenarios * {} policies * {} model(s) = '
                   '{} experiments').format(n_scenarios, n_policies,
                                            n_models, nr_of_exp))
